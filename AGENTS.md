@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository contains operational Bash scripts for inference services on the `thor` host. Top-level `start-*.sh` scripts launch vLLM, llama.cpp, or DS4; matching `stop-*.sh` scripts terminate them and release unified memory. `stop-all.sh` invokes all three stop scripts. Service-specific installation and troubleshooting notes live under `docs/`. Runtime output belongs in `logs/`, which is ignored by Git. Model weights, virtual environments, and compiled binaries remain outside this repository under paths such as `$HOME/models`, `$HOME/venvs`, and `$HOME/code`.
+This repository contains operational Bash scripts for inference services on the `thor` host. Top-level `start-*.sh` scripts launch vLLM, SGLang, llama.cpp, or DS4; matching `stop-*.sh` scripts terminate them and release unified memory. `stop-all.sh` invokes every service stop script. Service-specific installation and troubleshooting notes live under `docs/`. Runtime output belongs in `logs/`, which is ignored by Git. Model weights, virtual environments, and compiled binaries remain outside this repository under paths such as `$HOME/models`, `$HOME/venvs`, and `$HOME/code`.
 
 ## Build, Test, and Development Commands
 
@@ -17,6 +17,7 @@ Run one service at a time because the launchers currently share port `8301` and 
 
 ```bash
 ./start-vllm.sh
+./start-sglang.sh dspark
 ./start-llamacpp.sh
 ./start-ds4.sh
 ./stop-all.sh
@@ -39,3 +40,7 @@ History uses short Conventional Commit-style subjects such as `fix:`, `docs:`, a
 ## Security & Agent Instructions
 
 Never commit tokens, `.env` files, model weights, or runtime logs. Preserve host-specific paths deliberately. Make subsequent repository changes directly on the `main` branch unless the user explicitly requests a separate branch or worktree.
+
+## Network Access
+
+The `thor` host can reach external networks and download dependencies only through `http://192.168.50.50:18899`. Set both lowercase and uppercase proxy variables for networked commands, for example: `http_proxy=http://192.168.50.50:18899`, `https_proxy=http://192.168.50.50:18899`, `HTTP_PROXY=http://192.168.50.50:18899`, and `HTTPS_PROXY=http://192.168.50.50:18899`. Pass the same proxy to Docker builds and containers when they need network access. Keep `localhost`, `127.0.0.1`, and local subnets in `NO_PROXY`/`no_proxy` so service health checks remain direct.
