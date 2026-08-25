@@ -5,7 +5,7 @@
 set -e
 
 MODEL=/home/supcon/models/sakamakismile/Huihui-Qwen3.8-27B-abliterated-NVFP4
-PORT=8302
+PORT=8301
 LOG=$HOME/scripts/logs/vllm-server.log
 mkdir -p "$(dirname "$LOG")"
 

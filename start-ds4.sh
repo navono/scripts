@@ -7,7 +7,7 @@ set -e
 SERVE=$HOME/.local/bin/ds4-serve
 BASE=$HOME/gguf/DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf
 DRAFT=$HOME/gguf/DSpark-drafter-Q2K-Q8-0731.gguf
-PORT=8000
+PORT=8301
 LOG=$HOME/scripts/logs/ds4-server.log
 mkdir -p "$(dirname "$LOG")"
 
