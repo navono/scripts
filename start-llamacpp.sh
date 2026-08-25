@@ -23,7 +23,7 @@ nohup "$BIN" \
     -md "$DRAFT" \
     --split-mode layer \
     --spec-type draft-dflash \
-    --spec-draft-n-max 4 \
+    --spec-draft-n-max 3 \
     --alias qwen3.8-27b-uncensored \
     --parallel 2 \
     -ngl 99 \

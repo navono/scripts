@@ -35,7 +35,8 @@ nohup "$HOME/venvs/vllm/bin/vllm" serve "$MODEL" \
     --gpu-memory-utilization 0.80 \
     --speculative-config '{"method": "mtp", "num_speculative_tokens": 3}' \
     --reasoning-parser qwen3 \
-    --enable-auto-tool-choice --tool-call-parser hermes \
+    --enable-auto-tool-choice \
+    --tool-call-parser hermes \
     > "$LOG" 2>&1 &
 echo $! > /tmp/vllm-server.pid
 echo "server PID $(cat /tmp/vllm-server.pid), 日志: $LOG"
