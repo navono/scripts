@@ -131,7 +131,7 @@ export CPATH="$HOME/tools/pyinc/python3.12:$HOME/tools/pydev/usr/include"
 - `--gpu-memory-utilization 0.80` — **Jetson 上限就是 0.85**;0.92 会把系统逼到 404MB 可用,极易 OOM
 - `--speculative-config '{"method":"mtp","num_speculative_tokens":3}'` — MTP 使解码 15→21.7 t/s;代价:KV 池 120万→108万 token
 - `--reasoning-parser qwen3` — 分离思考段,否则 </think> 泄漏进正文
-- `--enable-auto-tool-choice --tool-call-parser hermes` — Claude Code 必需(Qwen 系用 hermes 格式)
+- `--enable-auto-tool-choice --tool-call-parser qwen3_xml` — Claude Code 必需(匹配模型 chat template 的 Qwen XML 工具调用格式)
 - `--served-model-name 名1 名2` — 多别名是**一个旗标后空格分隔**,逗号会被当成一个名字,重复旗标会后者覆盖前者
 
 **重启纪律**:vLLM 的 EngineCore 子进程在 kill 后不会立刻释放 100GB 统一内存,

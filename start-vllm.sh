@@ -36,7 +36,7 @@ nohup "$HOME/venvs/vllm/bin/vllm" serve "$MODEL" \
     --speculative-config '{"method": "mtp", "num_speculative_tokens": 3}' \
     --reasoning-parser qwen3 \
     --enable-auto-tool-choice \
-    --tool-call-parser hermes \
+    --tool-call-parser qwen3_xml \
     > "$LOG" 2>&1 &
 echo $! > /tmp/vllm-server.pid
 echo "server PID $(cat /tmp/vllm-server.pid), 日志: $LOG"
