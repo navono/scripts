@@ -4,7 +4,7 @@
 set -euo pipefail
 
 MODE="${1:-dspark}"
-MODEL=/home/supcon/models/sakamakismile/Huihui-Qwen3.8-27B-abliterated-NVFP4
+MODEL=/home/supcon/models/RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead
 DRAFT_MODEL=/home/supcon/models/RadixArk/Qwen3.8-27B-DSpark
 PORT=8301
 LOG="$HOME/scripts/logs/sglang-server.log"
@@ -22,7 +22,12 @@ fi
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 "$SCRIPT_DIR/stop-sglang.sh"
 
-AVAILABLE_GB="$(free -g | awk 'NR == 2 {print $7}')"
+AVAILABLE_GB=0
+for _ in $(seq 1 30); do
+    AVAILABLE_GB="$(free -g | awk 'NR == 2 {print $7}')"
+    (( AVAILABLE_GB >= 100 )) && break
+    sleep 2
+done
 echo "可用统一内存: ${AVAILABLE_GB}G（至少需要 100G）"
 if (( AVAILABLE_GB < 100 )); then
     echo "内存未释放，中止启动" >&2
@@ -36,7 +41,7 @@ export CPATH="$HOME/tools/pyinc/python3.12:$HOME/tools/pydev/usr/include"
 
 ARGS=(
     --model-path "$MODEL"
-    --served-model-name qwen3.8-27b-abliterated-nvfp4
+    --served-model-name qwen3.8-27b-nvfp4-bf16-lmhead
     --host 0.0.0.0
     --port "$PORT"
     --trust-remote-code

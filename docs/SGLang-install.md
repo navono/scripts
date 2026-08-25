@@ -12,6 +12,8 @@ Thor uses CUDA compute capability SM110, while the referenced DGX Spark recipe t
 
 All launchers share port `8301`, so stop other inference services first. Logs are written to `logs/sglang-server.log`.
 
+The deployed target is `RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead`, paired with `RadixArk/Qwen3.8-27B-DSpark`. The served model name is `qwen3.8-27b-nvfp4-bf16-lmhead`.
+
 ## Thor-Specific Requirements
 
 Always keep `--fp4-gemm-backend flashinfer_cutlass`. SGLang's automatic FP4 selection chooses CuteDSL on SM110; the first inference test caused a GPU hang and host reboot. CUTLASS compiles native `sm_110a` kernels on the first request and then reuses `$HOME/.cache/sglang`. Initial compilation can take several minutes.
@@ -20,8 +22,8 @@ Use Triton for attention and GDN, export the CUDA 13.2 library path, and expose 
 
 ## Validation
 
-The CUTLASS base configuration returned a valid OpenAI-compatible response and a valid `qwen3_coder` tool call. A warm-cache 256-token prose run took 30.52 seconds (about 8.4 tokens/s) without speculative decoding.
+The RadixArk target returned a valid OpenAI-compatible response and a valid `qwen3_coder` tool call with JSON arguments in 1.57 seconds. Using the reference repository's two-call net-decode method, DSpark reached 44.47 tokens/s on its LRUCache code probe and 19.47 tokens/s on its long-essay probe. During the code probe, draft acceptance rose to about 0.56–0.62. A shorter 256-token code request took 11.82 seconds end to end (21.7 tokens/s), demonstrating why net-decode and request-wall-time results must not be mixed.
 
-DSpark with decode CUDA Graph improved a 256-token prose run to 12.83 seconds (20.0 tokens/s) and a 256-token code run to 9.09 seconds (28.2 tokens/s). The tool-call test completed in 2.11 seconds with valid JSON arguments. The code run's draft acceptance rate was only about 0.25 because the draft targets the original RadixArk model while the deployed main model is the Huihui abliterated checkpoint. Test with `RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead` for a like-for-like comparison.
+The reference repository's 51.5 tokens/s result was measured on DGX Spark with its pinned SGLang image, Torch Compile, and the packed-FP4 `lm_head` checkpoint. The BF16-LMHead checkpoint became its default later and was not used for that historical measurement.
 
 Do not enable Torch Compile on the current Thor stack. Its GDN Triton compile fails because a loop-carried accumulator changes from FP32 to FP64. Decode CUDA Graph is enabled; prefill CUDA Graph is disabled because it adds a large capture sweep without helping this workload.
