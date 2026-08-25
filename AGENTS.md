@@ -38,4 +38,4 @@ History uses short Conventional Commit-style subjects such as `fix:`, `docs:`, a
 
 ## Security & Agent Instructions
 
-Never commit tokens, `.env` files, model weights, or runtime logs. Preserve host-specific paths deliberately. For every change, create a dedicated `codex/` Git worktree and branch; do not edit the primary workspace directly.
+Never commit tokens, `.env` files, model weights, or runtime logs. Preserve host-specific paths deliberately. Make subsequent repository changes directly on the `main` branch unless the user explicitly requests a separate branch or worktree.
