@@ -2,36 +2,35 @@
 
 ## Project Structure & Module Organization
 
-This repository contains operational Bash scripts for inference services on the `thor` host. Top-level `start-*.sh` scripts launch vLLM, SGLang, llama.cpp, or DS4; matching `stop-*.sh` scripts terminate them and release unified memory. `stop-all.sh` invokes every service stop script. Service-specific installation and troubleshooting notes live under `docs/`. Runtime output belongs in `logs/`, which is ignored by Git. Model weights, virtual environments, and compiled binaries remain outside this repository under paths such as `$HOME/models`, `$HOME/venvs`, and `$HOME/code`.
+This repository contains operational Bash scripts for inference services on the `thor` host. All runtime scripts live under `llm/`: `start-*.sh` launchers for vLLM, SGLang, llama.cpp, and DS4; matching `stop-*.sh` scripts terminate them and release unified memory; `stop-all.sh` invokes every service stop script; `switch` restarts the stack for a chosen backend (stopping all first, skipping when the target backend is already running). The root `Makefile` wraps the common `llm/` entry points (`make help` for a summary). Service-specific installation and troubleshooting notes live under `docs/`. Runtime output belongs in `logs/`, which is ignored by Git. Model weights, virtual environments, and compiled binaries remain outside this repository under paths such as `$HOME/models`, `$HOME/venvs`, and `$HOME/code`.
 
 ## Build, Test, and Development Commands
 
 There is no build system or automated test suite. Validate every script edit before running a service:
 
 ```bash
-bash -n *.sh
-git diff --check
+make check   # bash -n llm/*.sh llm/switch + git diff --check, does not start services
 ```
 
 Run one service at a time because the launchers currently share port `8301` and may consume most unified memory:
 
 ```bash
-./start-vllm.sh
-./start-sglang.sh dspark
-./start-llamacpp.sh
-./start-ds4.sh
-./stop-all.sh
+make vllm     # llm/switch vllm
+make ds       # llm/switch ds (dsv4flash)
+make sglang   # llm/switch sglang
+make llama    # llm/switch llama
+make stop     # llm/stop-all.sh
 ```
 
-Inspect startup failures with `tail -100 logs/vllm-server.log` (substitute the relevant service log). Do not execute stop or restart scripts as part of routine validation on a shared host.
+The `llm/` scripts can be called directly as well (`./llm/switch vllm`, `./llm/stop-all.sh`). Inspect startup failures with `tail -100 logs/<service>-server.log` (substitute the relevant service log). Do not execute stop or restart scripts as part of routine validation on a shared host.
 
 ## Coding Style & Naming Conventions
 
-Use Bash with a `#!/bin/bash` shebang and fail-fast behavior (`set -e`; prefer `set -euo pipefail` for new standalone scripts when unset variables are handled). Indent continued commands and control-flow bodies with four spaces. Quote variable expansions, use uppercase names for configuration constants (`MODEL`, `PORT`, `LOG`), and derive companion-script paths from `BASH_SOURCE`. Name entry points `start-<service>.sh` and `stop-<service>.sh`. Keep comments concise; Chinese is established for operator-facing messages and documentation.
+Use Bash with a `#!/bin/bash` shebang and fail-fast behavior (`set -e`; prefer `set -euo pipefail` for new standalone scripts when unset variables are handled). Indent continued commands and control-flow bodies with four spaces. Quote variable expansions, use uppercase names for configuration constants (`MODEL`, `PORT`, `LOG`), and derive companion-script paths from `BASH_SOURCE`. Name entry points `start-<service>.sh`, `stop-<service>.sh`, and the backend switcher `switch`. Makefile targets are lowercase after the `llm/switch` backends (`vllm`, `ds`, `sglang`, `llama`) plus `stop` and `check`; recipe lines use tabs. Keep comments concise; Chinese is established for operator-facing messages and documentation.
 
 ## Testing Guidelines
 
-At minimum, run `bash -n` and `git diff --check`. For launcher changes, verify required files exist, the configured port is intentional, `/health` or `/version` readiness checks still match the backend, and shutdown logic targets only the intended process. Record manual TPS or compatibility findings in the corresponding file under `docs/`.
+At minimum, run `make check` (`bash -n` + `git diff --check`). For launcher changes, verify required files exist, the configured port is intentional, `/health` or `/version` readiness checks still match the backend, and shutdown logic targets only the intended process. Record manual TPS or compatibility findings in the corresponding file under `docs/`.
 
 ## Commit & Pull Request Guidelines
 

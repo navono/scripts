@@ -35,4 +35,7 @@ for i in $(seq 1 120); do
     sleep 10
 done
 echo "HTTP $code (用时 $((i*10))s): http://$(hostname -I | awk '{print $1}'):$PORT"
-[ "$code" = "000" ] && { echo "未就绪,查看: tail -50 $LOG"; exit 1; }
+if [ "$code" = "000" ]; then
+    echo "未就绪,查看: tail -50 $LOG"
+    exit 1
+fi
