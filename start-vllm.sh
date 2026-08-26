@@ -33,6 +33,7 @@ nohup "$HOME/venvs/vllm/bin/vllm" serve "$MODEL" \
     --port $PORT \
     --max-model-len 262144 \
     --gpu-memory-utilization 0.80 \
+    --max-num-seqs 2 \
     --speculative-config '{"method": "mtp", "num_speculative_tokens": 3}' \
     --reasoning-parser qwen3 \
     --enable-auto-tool-choice \
