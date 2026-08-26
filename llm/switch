@@ -1,6 +1,6 @@
 #!/bin/bash
 # thor: 一键切换推理后端 (vllm/ds/sglang/llama)
-# 用法: ~/scripts/switch <vllm|ds|sglang|llama>
+# 用法: ~/scripts/llm/switch <vllm|ds|sglang|llama>
 # 先停全部服务(释放统一内存),再启动目标后端并等待就绪
 # 若目标后端已在运行,则跳过,不做重启
 set -euo pipefail

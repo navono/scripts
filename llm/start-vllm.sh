@@ -1,6 +1,6 @@
 #!/bin/bash
 # thor: 启动 vLLM NVFP4 + MTP 服务 (端口 8301)
-# 用法: ~/scripts/start-vllm.sh [--restart]
+# 用法: ~/scripts/llm/start-vllm.sh [--restart]
 # 依赖: ~/venvs/vllm (源码可编辑安装), CUDA 13.2 工具链
 set -e
 

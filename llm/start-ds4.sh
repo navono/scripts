@@ -1,6 +1,6 @@
 #!/bin/bash
 # thor: 启动 ds4 服务 (DeepSeek-V4-Flash Q2 + DSpark 投机解码, 端口 8000)
-# 用法: ~/scripts/start-ds4.sh
+# 用法: ~/scripts/llm/start-ds4.sh
 # 注意: 87GB 权重 demand-mapped,首问较慢属正常;--warm-weights 可预热(启动更慢)
 set -e
 
