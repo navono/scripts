@@ -1,0 +1,61 @@
+#!/bin/bash
+# thor: 一键切换推理后端 (vllm/ds/sglang/llama)
+# 用法: ~/scripts/switch <vllm|ds|sglang|llama>
+# 先停全部服务(释放统一内存),再启动目标后端并等待就绪
+# 若目标后端已在运行,则跳过,不做重启
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+MODE="${1:-}"
+
+case "${MODE}" in
+    vllm)
+        START="$SCRIPT_DIR/start-vllm.sh"
+        DESC="vLLM (Qwen3.8-27B NVFP4 + MTP, 端口 8301)"
+        ;;
+    ds)
+        START="$SCRIPT_DIR/start-ds4.sh"
+        DESC="DeepSeek-V4-Flash (Q2 + DSpark, 端口 8301)"
+        ;;
+    sglang)
+        START="$SCRIPT_DIR/start-sglang.sh"
+        DESC="SGLang + DSpark (Qwen3.8-27B, 端口 8301)"
+        ;;
+    llama)
+        START="$SCRIPT_DIR/start-llamacpp.sh"
+        DESC="llama.cpp (Qwen3.8-27B Q4_K_M + DFlash2, 端口 8301)"
+        ;;
+    *)
+        echo "用法: $0 <vllm|ds|sglang|llama>" >&2
+        echo "  vllm   - 切换到 vLLM 加载 Qwen3.8 的方式" >&2
+        echo "  ds     - 切换到 dsv4flash" >&2
+        echo "  sglang - 切换到 sglang 加载 Qwen3.8 的方式" >&2
+        echo "  llama  - 切换到 llama.cpp 加载 Qwen3.8 的方式" >&2
+        exit 2
+        ;;
+esac
+
+# --- 检测当前运行的后端(与各 stop 脚本的进程特征一致) ---
+running_backend() {
+    pgrep -f 'bin/vllm serve|VLLM::EngineCore' >/dev/null 2>&1 && echo vllm
+    pgrep -f 'ds4-server'                      >/dev/null 2>&1 && echo ds
+    pgrep -f '/home/supcon/venvs/sglang/bin/python.*sglang\.launch_server' >/dev/null 2>&1 && echo sglang
+    pgrep -f 'llama-server'                    >/dev/null 2>&1 && echo llama
+}
+
+CURRENT="$(running_backend || true)"
+
+if [ "${CURRENT}" = "${MODE}" ]; then
+    echo "已在运行 ${MODE} (${DESC}),跳过切换"
+    exit 0
+fi
+
+if [ -n "${CURRENT}" ]; then
+    echo "检测到当前后端: ${CURRENT},即将切换到 ${MODE}"
+else
+    echo "当前无推理服务在运行,即将启动 ${MODE}"
+fi
+
+"$SCRIPT_DIR/stop-all.sh"
+"$START"
+echo "完成: ${DESC}"

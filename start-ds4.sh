@@ -22,6 +22,7 @@ sleep 2
 nohup "$SERVE" \
     -m "$BASE" \
     --dspark "$DRAFT" \
+    -c 262144 \
     --host 0.0.0.0 --port $PORT \
     > "$LOG" 2>&1 &
 echo $! > /tmp/ds4-server.pid
