@@ -25,6 +25,9 @@ export HTTP_PROXY=http://192.168.50.50:18899 HTTPS_PROXY=http://192.168.50.50:18
 MAX_ATTEMPTS=60          # 单文件最大重试次数
 RETRY_DELAY=20           # 重试间隔(秒)
 MAX_ATTEMPTS_API=20      # 拉取文件清单(API)的最大重试次数
+# 端点可覆盖: 主站 LFS/CDN 经代理断流时用镜像
+#   HF_ENDPOINT=https://hf-mirror.com ~/scripts/hf-download.sh ...
+HF_ENDPOINT="${HF_ENDPOINT:-https://huggingface.co}"
 LOG_DIR="$HOME/scripts/logs"
 mkdir -p "$LOG_DIR"
 
@@ -135,7 +138,7 @@ API_JSON=""
 API_FILE=$(mktemp)
 for i in $(seq 1 "$MAX_ATTEMPTS_API"); do
     if API_JSON=$(curl -sL --retry 2 --connect-timeout 30 -m 60 \
-        "https://huggingface.co/api/models/${REPO}?blobs=true") && [[ -n "$API_JSON" ]]; then
+        "${HF_ENDPOINT}/api/models/${REPO}?blobs=true") && [[ -n "$API_JSON" ]]; then
         echo "$API_JSON" > "$API_FILE"
         python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$API_FILE" 2>/dev/null && break
     fi
@@ -164,7 +167,7 @@ done < "$MAP_FILE"
 # --- 4. 单文件下载函数 -- 断点续传 + 重试 + 大小校验 ---
 download_file() {
     local rel="$1" size="$2" out="$DEST/$rel"
-    local url="https://huggingface.co/${REPO}/resolve/main/${rel}"
+    local url="${HF_ENDPOINT}/${REPO}/resolve/main/${rel}"
     mkdir -p "$(dirname "$out")"
 
     # 已完整: 跳过(中断重启时生效)
@@ -177,7 +180,9 @@ download_file() {
     while :; do
         attempts=$((attempts + 1))
         set +e
+        # 断流守卫: 速度 <10KB/s 持续 30s 即放弃本次连接(rc=28), 快速进入重试
         curl -sL --path-as-is --connect-timeout 30 --max-time 900 \
+            --speed-limit 10240 --speed-time 30 \
             -C - -o "$out" "$url" >/dev/null 2>&1
         rc=$?
         set -e

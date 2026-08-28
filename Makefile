@@ -3,7 +3,7 @@
 # 说明: 各后端共用端口 8301 与统一内存,一次只跑一个
 SHELL := /bin/bash
 DIR := llm
-.PHONY: help vllm ds sglang llama stop download download-stop check
+.PHONY: help vllm ds sglang llama flashnext stop download download-stop check
 
 .DEFAULT_GOAL := help
 
@@ -13,6 +13,7 @@ help:
 	@echo "  make ds      切换到 dsv4flash (DeepSeek-V4-Flash Q2)"
 	@echo "  make sglang  切换到 SGLang + DSpark (Qwen3.8-27B)"
 	@echo "  make llama   切换到 llama.cpp (Qwen3.8-27B Q4_K_M)"
+	@echo "  make flashnext 切换到 Qwen3.8-Flash-Next (llama.cpp qwen4exp)"
 	@echo ""
 	@echo "  make stop    停止全部服务"
 	@echo ""
@@ -36,6 +37,9 @@ sglang:
 
 llama:
 	@$(DIR)/switch llama
+
+flashnext:
+	@$(DIR)/switch flashnext
 
 stop:
 	@$(DIR)/stop-all.sh
