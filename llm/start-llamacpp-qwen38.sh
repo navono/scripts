@@ -1,6 +1,6 @@
 #!/bin/bash
 # thor: 启动 llama.cpp DFlash2 服务 (端口 8301, Qwen3.8-27B Q4_K_M + DFlash2 草稿, ~17.5 t/s)
-# 用法: ~/scripts/llm/start-llamacpp.sh
+# 用法: ~/scripts/llm/start-llamacpp-qwen38.sh
 set -e
 
 BIN=$HOME/code/llama.cpp-dflash2/build/bin/llama-server

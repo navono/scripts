@@ -10,7 +10,7 @@ MODE="${1:-}"
 
 case "${MODE}" in
     vllm)
-        START="$SCRIPT_DIR/start-vllm.sh"
+        START="$SCRIPT_DIR/start-vllm-qwen38.sh"
         DESC="vLLM (Qwen3.8-27B NVFP4 + MTP, 端口 8301)"
         ;;
     ds)
@@ -18,11 +18,11 @@ case "${MODE}" in
         DESC="DeepSeek-V4-Flash (Q2 + DSpark, 端口 8301)"
         ;;
     sglang)
-        START="$SCRIPT_DIR/start-sglang.sh"
+        START="$SCRIPT_DIR/start-sglang-qwen38.sh"
         DESC="SGLang + DSpark (Qwen3.8-27B, 端口 8301)"
         ;;
     llama)
-        START="$SCRIPT_DIR/start-llamacpp.sh"
+        START="$SCRIPT_DIR/start-llamacpp-qwen38.sh"
         DESC="llama.cpp (Qwen3.8-27B Q4_K_M + DFlash2, 端口 8301)"
         ;;
     flashnext)

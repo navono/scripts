@@ -1,6 +1,6 @@
 #!/bin/bash
 # thor: 启动 SGLang + DSpark 服务（端口 8301）
-# 用法: ./start-sglang.sh [dspark|base]
+# 用法: ./start-sglang-qwen38.sh [dspark|base]
 set -euo pipefail
 
 MODE="${1:-dspark}"
@@ -20,7 +20,7 @@ if [[ "$MODE" == "dspark" && ! -f "$DRAFT_MODEL/model.safetensors" ]]; then
 fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-"$SCRIPT_DIR/stop-sglang.sh"
+"$SCRIPT_DIR/stop-sglang-qwen38.sh"
 
 AVAILABLE_GB=0
 for _ in $(seq 1 30); do
