@@ -21,6 +21,7 @@ mkdir -p "$(dirname "$LOG")"
 # ngram-mod: 无草稿投机解码(参数来自 sxuff/qwen38-flash-next-dgx-spark)。
 # 2026-08-28 配对实测: 复制代码 3.99x / JSON 2.0x / 聚合 1.96x, 输出无损;
 # 自由生成无增益无副作用。
+# batch/ubatch 加大: 19K token 预填充实测 262 -> 278 t/s(+6%), 解码无回归。
 [ -x "$BIN" ]     || { echo "缺引擎: $BIN (见 docs/flashnext-install.md)"; exit 1; }
 [ -f "$MODEL" ]   || { echo "缺模型: $MODEL"; exit 1; }
 [ -f "$MMPROJ" ]  || { echo "缺视觉: $MMPROJ"; exit 1; }
@@ -44,6 +45,8 @@ nohup "$BIN" \
     -fa on \
     -t 14 \
     --threads-batch 14 \
+    --batch-size 8192 \
+    --ubatch-size 1024 \
     --spec-type ngram-mod \
     --spec-ngram-mod-n-match 24 \
     --spec-ngram-mod-n-min 48 \
