@@ -18,6 +18,9 @@ mkdir -p "$(dirname "$LOG")"
 # 视觉: 必须配 --no-mmproj-offload。mmproj 卸载 GPU 的路径在 PR #27742 会死锁
 # (futex_wait, 2026-08-28 实测); 视觉编码器留 CPU 则正常, 已实测图片解析可用。
 # 另: 音频/视频输入需要 ffprobe 在 PATH, 未装则仅图片可用。
+# ngram-mod: 无草稿投机解码(参数来自 sxuff/qwen38-flash-next-dgx-spark)。
+# 2026-08-28 配对实测: 复制代码 3.99x / JSON 2.0x / 聚合 1.96x, 输出无损;
+# 自由生成无增益无副作用。
 [ -x "$BIN" ]     || { echo "缺引擎: $BIN (见 docs/flashnext-install.md)"; exit 1; }
 [ -f "$MODEL" ]   || { echo "缺模型: $MODEL"; exit 1; }
 [ -f "$MMPROJ" ]  || { echo "缺视觉: $MMPROJ"; exit 1; }
@@ -41,6 +44,10 @@ nohup "$BIN" \
     -fa on \
     -t 14 \
     --threads-batch 14 \
+    --spec-type ngram-mod \
+    --spec-ngram-mod-n-match 24 \
+    --spec-ngram-mod-n-min 48 \
+    --spec-ngram-mod-n-max 64 \
     --host 0.0.0.0 \
     --port $PORT \
     > "$LOG" 2>&1 &
