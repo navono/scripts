@@ -15,9 +15,10 @@ docs/           各引擎安装实录与硬件对比笔记
 skills/         可复用的 agent 技能 (SKILL.md 格式), 供各 agent 工具挂载
 logs/           运行日志 (git 忽略)
 hf-download.sh  HuggingFace 仓库批量下载器 (断点续传 + 重试 + 大小校验), 跨设备共用
-Makefile        常用入口包装 (thor + rtx4090), make help 查看摘要
-make-help.sh    make help 的中文输出文本 (本机 make 按 GBK 解析 Makefile, 中文需放 bash 脚本)
-make-completion.bash  make 目标补全; clone 后跑一次 ./make-completion.bash install 写入 ~/.bashrc
+Makefile        常用入口包装, make <thor|4090> <动作> (make help 查看摘要)
+make/           Makefile 支撑脚本: make-dispatch.sh (设备动作分发) / make-help.sh
+                (make help 的中文文本, 本机 make 按 GBK 解析 Makefile 故中文放 bash) /
+                make-completion.bash (目标两级补全, install 写入 ~/.bashrc)
 ```
 
 新增设备时每台一个目录（如 `spark/`、`rtx/`、`mac/`），结构与 `thor/` 一致；模型下载等通用工具放仓库根目录复用。
@@ -37,15 +38,16 @@ make-completion.bash  make 目标补全; clone 后跑一次 ./make-completion.ba
 ### 常用命令
 
 ```bash
-make start-vllm      # 切换到 vLLM (等价: ./thor/switch vllm)
-make start-sglang    # 切换到 SGLang
-make start-llama     # 切换到 llama.cpp
-make start-ds        # 切换到 dsv4flash
-make start-flashnext # 切换到 Qwen3.8-Flash-Next
+make thor start-vllm      # 切换到 vLLM (等价: ./thor/switch vllm)
+make thor start-sglang    # 切换到 SGLang
+make thor start-llama     # 切换到 llama.cpp
+make thor start-ds        # 切换到 dsv4flash
+make thor start-flashnext # 切换到 Qwen3.8-Flash-Next
+make thor stop-all        # 停止全部服务
+make thor status          # 查看当前后端/PID/统一内存 (仅限 thor 主机执行)
 
-make stop-all        # 停止全部服务
-make check           # 校验 (bash -n + git diff --check), 不启动服务
-make help            # 查看全部目标
+make check                # 校验 (bash -n + git diff --check), 不启动服务
+make help                 # 查看全部目标
 ```
 
 ### 模型下载
@@ -88,7 +90,7 @@ bash rtx4090/start-qwen38-coldfusion.sh    # 端口 12234, API-Key 见脚本内 
 bash rtx4090/stop-qwen38-coldfusion.sh
 ```
 
-以上也对应 make 目标：`make start-flash` / `make stop-flash`、`make start-coldfusion` / `make stop-coldfusion`。
+以上也对应 make 目标：`make 4090 start-flash` / `make 4090 stop-flash`、`make 4090 start-coldfusion` / `make 4090 stop-coldfusion`；`make 4090 status` 一条命令查看两服务状态与双卡显存占用。
 
 ## 连接与同步
 
