@@ -12,6 +12,7 @@ thor/           thor 主机 (Jetson AGX Thor) 的推理服务启停脚本
   switch        后端切换器: 先停全部, 再启动目标后端 (目标已在跑则跳过)
 rtx4090/        本机 (2× RTX 4090 Windows 工作站) 的推理服务脚本
 docs/           各引擎安装实录与硬件对比笔记
+skills/         可复用的 agent 技能 (SKILL.md 格式), 供各 agent 工具挂载
 logs/           运行日志 (git 忽略)
 hf-download.sh  HuggingFace 仓库批量下载器 (断点续传 + 重试 + 大小校验), 跨设备共用
 Makefile        常用入口包装 (thor + rtx4090), make help 查看摘要
@@ -87,6 +88,21 @@ bash rtx4090/stop-qwen38-coldfusion.sh
 ```
 
 以上也对应 make 目标：`make flash` / `make flash-stop`、`make coldfusion` / `make coldfusion-stop`。
+
+## 连接与同步
+
+本机（rtx4090 工作站）到 thor 的免密登录已配置：`ssh thor` 直连（`~/.ssh/config` 条目：192.168.50.55:22, user supcon）。免密配置的完整方法沉淀为 [skills/ssh-passwordless-login](skills/ssh-passwordless-login/SKILL.md)。仓库经 GitHub（`navono/scripts`）同步：本机 push 后 thor 端 `~/scripts` pull；模型权重等大文件走 scp/rsync，不入库。
+
+## skills 目录（供 agent 工具使用）
+
+`skills/<name>/SKILL.md` 采用通用 Agent Skills 格式（frontmatter 的 name/description + Markdown 正文），作为各 agent 工具技能的唯一事实源。工具侧挂载后即被自动发现，例如 Windows 下用目录联接：
+
+```
+mklink /J "%USERPROFILE%\.zcode\skills\<name>"  "D:\sourcecode\scripts\skills\<name>"   # ZCode
+mklink /J "%USERPROFILE%\.claude\skills\<name>" "D:\sourcecode\scripts\skills\<name>"   # Claude Code
+```
+
+约定：技能内容保持通用（不写死本机绝对路径、不含密钥），可执行辅助脚本与 SKILL.md 同目录放置。
 
 ## 文档索引
 
