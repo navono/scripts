@@ -1,6 +1,6 @@
 #!/bin/bash
 # thor: 启动 ds4 服务 (DeepSeek-V4-Flash Q2 + DSpark 投机解码, 端口 8000)
-# 用法: ~/scripts/llm/start-ds4.sh
+# 用法: ~/scripts/thor/start-ds4.sh
 # 注意: 87GB 权重 demand-mapped,首问较慢属正常;--warm-weights 可预热(启动更慢)
 set -e
 
@@ -8,7 +8,7 @@ SERVE=$HOME/.local/bin/ds4-serve
 BASE=$HOME/gguf/DeepSeek-V4-Flash-IQ2XXS-w2Q2K-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-0731.gguf
 DRAFT=$HOME/gguf/DSpark-drafter-Q2K-Q8-0731.gguf
 PORT=8301
-LOG=$HOME/scripts/logs/ds4-server.log
+LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/ds4-server.log"
 mkdir -p "$(dirname "$LOG")"
 
 for p in $(ps aux | grep -a "ds4-server" | grep -av grep | awk '{print $2}'); do

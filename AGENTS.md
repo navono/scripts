@@ -2,31 +2,32 @@
 
 ## Project Structure & Module Organization
 
-This repository contains operational Bash scripts for inference services on the `thor` host. All runtime scripts live under `llm/`: `start-*.sh` launchers for vLLM, SGLang, llama.cpp, and DS4; matching `stop-*.sh` scripts terminate them and release unified memory; `stop-all.sh` invokes every service stop script; `switch` restarts the stack for a chosen backend (stopping all first, skipping when the target backend is already running). The root `Makefile` wraps the common `llm/` entry points (`make help` for a summary). Service-specific installation and troubleshooting notes live under `docs/`. Runtime output belongs in `logs/`, which is ignored by Git. Model weights, virtual environments, and compiled binaries remain outside this repository under paths such as `$HOME/models`, `$HOME/venvs`, and `$HOME/code`.
+This repository contains operational Bash scripts for LLM inference deployments, organized one top-level directory per host. The `thor/` directory holds the scripts for the Jetson AGX Thor host (`thor`): `start-*.sh` launchers for vLLM, SGLang, llama.cpp, DS4, and Flash-Next; matching `stop-*.sh` scripts terminate them and release unified memory; `stop-all.sh` invokes every service stop script; `switch` restarts the stack for a chosen backend (stopping all first, skipping when the target backend is already running). New hosts get their own directory with the same layout (for example `spark/`, `rtx/`, `mac/`). The `rtx4090/` directory holds scripts for the local Windows workstation with 2× RTX 4090, using the same `start-<service>.sh` / `stop-<service>.sh` naming as `thor/`; its stop scripts resolve the listening PID via `netstat` + `taskkill` (engine binaries stay under `/e/data/tools`, outside the repository). On Windows hosts, Git Bash is the default shell environment: invoke all scripts with `bash <script>` and run the Makefile from Git Bash. The locally installed Gow `make` 3.81 parses the Makefile as ANSI/GBK and direct-spawns simple recipes without a shell, so keep the Makefile ASCII, put Chinese output text in bash scripts (see `make-help.sh`), and quote script paths in recipes. The root `Makefile` wraps the common `thor/` entry points (`make help` for a summary); shared tooling such as `hf-download.sh` stays at the repository root. Service-specific installation and troubleshooting notes live under `docs/`. Runtime output belongs in `logs/`, which is ignored by Git. Model weights, virtual environments, and compiled binaries remain outside this repository under paths such as `$HOME/models`, `$HOME/venvs`, and `$HOME/code`.
 
 ## Build, Test, and Development Commands
 
 There is no build system or automated test suite. Validate every script edit before running a service:
 
 ```bash
-make check   # bash -n llm/*.sh llm/switch + git diff --check, does not start services
+make check   # bash -n thor/*.sh thor/switch rtx4090/*.sh hf-download.sh + git diff --check, does not start services
 ```
 
 Run one service at a time because the launchers currently share port `8301` and may consume most unified memory:
 
 ```bash
-make vllm     # llm/switch vllm
-make ds       # llm/switch ds (dsv4flash)
-make sglang   # llm/switch sglang
-make llama    # llm/switch llama
-make stop     # llm/stop-all.sh
+make vllm     # thor/switch vllm
+make ds       # thor/switch ds (dsv4flash)
+make sglang   # thor/switch sglang
+make llama    # thor/switch llama
+make flashnext  # thor/switch flashnext
+make stop     # thor/stop-all.sh
 ```
 
-The `llm/` scripts can be called directly as well (`./llm/switch vllm`, `./llm/stop-all.sh`). Inspect startup failures with `tail -100 logs/<service>-server.log` (substitute the relevant service log). Do not execute stop or restart scripts as part of routine validation on a shared host.
+The `thor/` scripts can be called directly as well (`./thor/switch vllm`, `./thor/stop-all.sh`). Inspect startup failures with `tail -100 logs/<service>-server.log` (substitute the relevant service log). Do not execute stop or restart scripts as part of routine validation on a shared host.
 
 ## Coding Style & Naming Conventions
 
-Use Bash with a `#!/bin/bash` shebang and fail-fast behavior (`set -e`; prefer `set -euo pipefail` for new standalone scripts when unset variables are handled). Indent continued commands and control-flow bodies with four spaces. Quote variable expansions, use uppercase names for configuration constants (`MODEL`, `PORT`, `LOG`), and derive companion-script paths from `BASH_SOURCE`. Name entry points `start-<service>.sh`, `stop-<service>.sh`, and the backend switcher `switch`. Makefile targets are lowercase after the `llm/switch` backends (`vllm`, `ds`, `sglang`, `llama`) plus `stop` and `check`; recipe lines use tabs. Keep comments concise; Chinese is established for operator-facing messages and documentation.
+Use Bash with a `#!/bin/bash` shebang and fail-fast behavior (`set -e`; prefer `set -euo pipefail` for new standalone scripts when unset variables are handled). Indent continued commands and control-flow bodies with four spaces. Quote variable expansions, use uppercase names for configuration constants (`MODEL`, `PORT`, `LOG`), and derive companion-script paths from `BASH_SOURCE`. Name entry points `start-<service>.sh`, `stop-<service>.sh`, and the backend switcher `switch`. Makefile targets are lowercase after the `thor/switch` backends (`vllm`, `ds`, `sglang`, `llama`, `flashnext`), the rtx4090 services (`flash`, `flash-stop`, `coldfusion`, `coldfusion-stop`), plus `stop`, `download`, and `check`; recipe lines use tabs. Keep comments concise; Chinese is established for operator-facing messages and documentation.
 
 ## Testing Guidelines
 

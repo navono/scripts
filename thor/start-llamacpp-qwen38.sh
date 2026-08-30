@@ -1,6 +1,6 @@
 #!/bin/bash
 # thor: 启动 llama.cpp DFlash2 服务 (端口 8301, Qwen3.8-27B Q4_K_M + DFlash2 草稿, ~17.5 t/s)
-# 用法: ~/scripts/llm/start-llamacpp-qwen38.sh
+# 用法: ~/scripts/thor/start-llamacpp-qwen38.sh
 set -e
 
 BIN=$HOME/code/llama.cpp-dflash2/build/bin/llama-server
@@ -8,7 +8,7 @@ TARGET=$HOME/models/JonathanColetti/Qwen3.8-27B-Uncensored-GGUF/Qwen3.8-27B-Unce
 DRAFT=$HOME/models/incoai/Qwen3.8-27B-DFlash2-GGUF/Qwen3.8-27B-DFlash2-Q8_0.gguf
 MMPROJ=$HOME/models/JonathanColetti/Qwen3.8-27B-Uncensored-GGUF/Qwen3.8-27B-Uncensored-vision-f16.gguf  # 需要视觉时取消注释并加 --mmproj
 PORT=8301
-LOG=$HOME/scripts/logs/llamacpp-server.log
+LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/llamacpp-server.log"
 mkdir -p "$(dirname "$LOG")"
 
 for p in $(ps aux | grep -a "llama-server" | grep -av grep | awk '{print $2}'); do

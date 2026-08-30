@@ -1,6 +1,6 @@
 #!/bin/bash
 # thor: 启动 Qwen3.8-Flash-Next 服务 (llama.cpp qwen4exp 分支, AtomicChat AD-4.27bpw, 端口 8301)
-# 用法: ~/scripts/llm/start-flashnext.sh
+# 用法: ~/scripts/thor/start-flashnext.sh
 # 说明: 176B MoE(激活 6B), 95GB 分片 mmap 按需加载,首次请求有 IO 高峰属正常
 # 引擎: ~/code/llama.cpp-qwen4exp (unsloth PR #27742, sm_110, 见 docs/)
 set -euo pipefail
@@ -12,7 +12,7 @@ MMPROJ=$HOME/models/AtomicChat/Qwen3.8-Flash-Next-GGUF/mmproj-Qwen3.8-Flash-Next
 # 补丁模板: 原模板遇中途 system 消息直接 raise(Claude Code 必触发), 此版把 system 归拢到开头
 TPL=$HOME/models/AtomicChat/Qwen3.8-Flash-Next-GGUF/chat-template-claude-code.jinja
 PORT=8301
-LOG=$HOME/scripts/logs/flashnext-server.log
+LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/flashnext-server.log"
 mkdir -p "$(dirname "$LOG")"
 
 # 视觉: 必须配 --no-mmproj-offload。mmproj 卸载 GPU 的路径在 PR #27742 会死锁

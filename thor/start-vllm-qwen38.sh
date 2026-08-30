@@ -1,12 +1,12 @@
 #!/bin/bash
 # thor: 启动 vLLM NVFP4 + MTP 服务 (端口 8301)
-# 用法: ~/scripts/llm/start-vllm-qwen38.sh [--restart]
+# 用法: ~/scripts/thor/start-vllm-qwen38.sh [--restart]
 # 依赖: ~/venvs/vllm (源码可编辑安装), CUDA 13.2 工具链
 set -e
 
 MODEL=/home/supcon/models/sakamakismile/Huihui-Qwen3.8-27B-abliterated-NVFP4
 PORT=8301
-LOG=$HOME/scripts/logs/vllm-server.log
+LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/vllm-server.log"
 mkdir -p "$(dirname "$LOG")"
 
 # --- 先清理旧实例(含 EngineCore 僵尸,否则统一内存不释放) ---

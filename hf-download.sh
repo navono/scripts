@@ -28,7 +28,7 @@ MAX_ATTEMPTS_API=20      # 拉取文件清单(API)的最大重试次数
 # 端点可覆盖: 主站 LFS/CDN 经代理断流时用镜像
 #   HF_ENDPOINT=https://hf-mirror.com ~/scripts/hf-download.sh ...
 HF_ENDPOINT="${HF_ENDPOINT:-https://huggingface.co}"
-LOG_DIR="$HOME/scripts/logs"
+LOG_DIR="$(dirname -- "${BASH_SOURCE[0]}")/logs"
 mkdir -p "$LOG_DIR"
 
 usage() {

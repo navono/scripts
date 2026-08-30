@@ -7,7 +7,7 @@ MODE="${1:-dspark}"
 MODEL=/home/supcon/models/RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead
 DRAFT_MODEL=/home/supcon/models/RadixArk/Qwen3.8-27B-DSpark
 PORT=8301
-LOG="$HOME/scripts/logs/sglang-server.log"
+LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/sglang-server.log"
 PID_FILE=/tmp/sglang-server.pid
 
 if [[ "$MODE" != "base" && "$MODE" != "dspark" ]]; then
@@ -19,7 +19,6 @@ if [[ "$MODE" == "dspark" && ! -f "$DRAFT_MODEL/model.safetensors" ]]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 "$SCRIPT_DIR/stop-sglang-qwen38.sh"
 
 AVAILABLE_GB=0

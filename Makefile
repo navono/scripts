@@ -1,30 +1,19 @@
-# thor: 推理服务脚本 Makefile
-# 用法: make help
-# 说明: 各后端共用端口 8301 与统一内存,一次只跑一个
+# LLM inference service scripts Makefile (thor + rtx4090)
+# Usage: make help  (Chinese help text lives in make-help.sh, keep this file ASCII:
+#                    Gow make 3.81 parses the Makefile as ANSI/GBK and mangles UTF-8)
+# Notes: thor backends share port 8301 and unified memory, one at a time;
+#        rtx4090 services share the 2-GPU VRAM, one at a time
+# Hint: quote script paths in recipes - this make direct-spawns argument-free
+#       simple commands without a shell, which fails silently for `bash <file>`
 SHELL := /bin/bash
-DIR := llm
-.PHONY: help vllm ds sglang llama flashnext stop download download-stop check
+DIR := thor
+RTX := rtx4090
+.PHONY: help vllm ds sglang llama flashnext stop flash flash-stop coldfusion coldfusion-stop download download-stop check
 
 .DEFAULT_GOAL := help
 
 help:
-	@echo "切换推理后端 (共用端口 8301, 一次一个):"
-	@echo "  make vllm    切换到 vLLM (Qwen3.8-27B NVFP4 + MTP)"
-	@echo "  make ds      切换到 dsv4flash (DeepSeek-V4-Flash Q2)"
-	@echo "  make sglang  切换到 SGLang + DSpark (Qwen3.8-27B)"
-	@echo "  make llama   切换到 llama.cpp (Qwen3.8-27B Q4_K_M)"
-	@echo "  make flashnext 切换到 Qwen3.8-Flash-Next (llama.cpp qwen4exp)"
-	@echo ""
-	@echo "  make stop    停止全部服务"
-	@echo ""
-	@echo " 模型下载 (无参数时列出仓库内各档位):"
-	@echo "  make download REPO=xxx [ONLY=前缀] [EXTRA=...]   包装 hf-download.sh"
-	@echo "   例: make download REPO=AtomicChat/Qwen3.8-Flash-Next-GGUF"
-	@echo "       make download REPO=AtomicChat/Qwen3.8-Flash-Next-GGUF ONLY=Qwen3.8-Flash-Next-AD-4.27bpw-Q4_K_M-M64"
-	@echo "       make download REPO=... ONLY=... EXTRA=--dry-run   # 只预览不下"
-	@echo ""
-	@echo "  make download-stop   停止当前下载任务"
-	@echo "  make check   校验 (bash -n + git diff --check), 不启动服务"
+	@bash "make-help.sh"
 
 vllm:
 	@$(DIR)/switch vllm
@@ -44,6 +33,18 @@ flashnext:
 stop:
 	@$(DIR)/stop-all.sh
 
+flash:
+	@bash "$(RTX)/start-qwen38-flash.sh"
+
+flash-stop:
+	@bash "$(RTX)/stop-qwen38-flash.sh"
+
+coldfusion:
+	@bash "$(RTX)/start-qwen38-coldfusion.sh"
+
+coldfusion-stop:
+	@bash "$(RTX)/stop-qwen38-coldfusion.sh"
+
 download:
 	@./hf-download.sh $(REPO) $(if $(ONLY),--only $(ONLY),) $(EXTRA)
 
@@ -51,6 +52,6 @@ download-stop:
 	@./hf-download.sh --stop
 
 check:
-	@bash -n $(DIR)/*.sh $(DIR)/switch hf-download.sh
+	@bash -n $(DIR)/*.sh $(DIR)/switch $(RTX)/*.sh hf-download.sh make-help.sh
 	@git diff --check
 	@echo "check OK"
