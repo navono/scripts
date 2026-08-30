@@ -14,6 +14,7 @@ usage() {
   4090:
     start-flash  stop-flash  start-coldfusion  stop-coldfusion  status
 动作可省略设备前缀自动路由, 如 make start-flash
+thor 动作在其他机器执行时自动经 ssh 转发到 thor
 EOF
 }
 
@@ -28,6 +29,15 @@ run_thor() {
         status)          thor/status.sh ;;
         *) echo "未知 thor 动作: $1" >&2; usage; exit 1 ;;
     esac
+}
+
+# thor 动作只能在 thor 主机本地执行; 其他机器 (如 Windows 工作站) 自动经 ssh 转发
+thor_action() {
+    if uname -s | grep -qi linux; then
+        run_thor "$1"
+    else
+        exec ssh thor -- "make -C ~/scripts thor $1"
+    fi
 }
 
 run_4090() {
@@ -48,11 +58,11 @@ case "${1:-}" in
         shift
         [ $# -ge 1 ] || { echo "缺少动作" >&2; usage; exit 1; }
         for action in "$@"; do
-            case "$DEVICE" in thor) run_thor "$action" ;; 4090) run_4090 "$action" ;; esac
+            case "$DEVICE" in thor) thor_action "$action" ;; 4090) run_4090 "$action" ;; esac
         done
         ;;
     start-vllm|start-ds|start-sglang|start-llama|start-flashnext|stop-all)
-        run_thor "$1" ;;
+        thor_action "$1" ;;
     start-flash|stop-flash|start-coldfusion|stop-coldfusion)
         run_4090 "$1" ;;
     *)

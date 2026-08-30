@@ -12,7 +12,7 @@ thor 推理后端 (共用端口 8301, 一次一个):
   make thor start-llama     切换到 llama.cpp (Qwen3.8-27B Q4_K_M)
   make thor start-flashnext 切换到 Qwen3.8-Flash-Next (llama.cpp qwen4exp)
   make thor stop-all        停止 thor 全部服务
-  make thor status          查看当前后端/PID/统一内存 (仅限 thor 主机执行)
+  make thor status          查看当前后端/PID/统一内存 (其他机器自动经 ssh 转发)
 
 rtx4090 本机服务 (共用双卡显存, 一次一个):
   make 4090 start-flash / stop-flash          Qwen3.8-Flash-Next-Uncensored (端口 8301)
