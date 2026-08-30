@@ -31,12 +31,13 @@ run_thor() {
     esac
 }
 
-# thor 动作只能在 thor 主机本地执行; 其他机器 (如 Windows 工作站) 自动经 ssh 转发
+# thor 动作只能在 thor 主机本地执行; 其他机器 (如 Windows 工作站) 自动经 ssh 转发。
+# 依赖 thor 端已部署本仓库 (~/scripts); 未部署时给明确指引
 thor_action() {
     if uname -s | grep -qi linux; then
         run_thor "$1"
     else
-        exec ssh thor -- "make -C ~/scripts thor $1"
+        exec ssh thor -- "if [ -d ~/scripts/.git ]; then make -C ~/scripts thor $1; else echo 'thor 端未部署 scripts 仓库: 在本机执行 git push thor main 完成部署'; exit 127; fi"
     fi
 }
 

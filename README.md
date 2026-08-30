@@ -44,7 +44,7 @@ make thor start-llama     # 切换到 llama.cpp
 make thor start-ds        # 切换到 dsv4flash
 make thor start-flashnext # 切换到 Qwen3.8-Flash-Next
 make thor stop-all        # 停止全部服务
-make thor status          # 查看当前后端/PID/统一内存 (仅限 thor 主机执行)
+make thor status          # 查看当前后端/PID/统一内存 (非 thor 主机自动经 ssh 转发)
 
 make check                # 校验 (bash -n + git diff --check), 不启动服务
 make help                 # 查看全部目标

@@ -29,4 +29,5 @@ rtx4090 本机服务 (共用双卡显存, 一次一个):
 
   make download-stop   停止当前下载任务
   make check   校验 (bash -n + git diff --check), 不启动服务
+  make deploy  提交后推送部署到 thor (git push thor main)
 EOF
