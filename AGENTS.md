@@ -27,7 +27,7 @@ The `thor/` scripts can be called directly as well (`./thor/switch vllm`, `./tho
 
 ## Coding Style & Naming Conventions
 
-Use Bash with a `#!/bin/bash` shebang and fail-fast behavior (`set -e`; prefer `set -euo pipefail` for new standalone scripts when unset variables are handled). Indent continued commands and control-flow bodies with four spaces. Quote variable expansions, use uppercase names for configuration constants (`MODEL`, `PORT`, `LOG`), and derive companion-script paths from `BASH_SOURCE`. Name entry points `start-<service>.sh`, `stop-<service>.sh`, and the backend switcher `switch`. Makefile syntax is device-first: `make <thor|4090> <action>` (e.g. `make thor start-vllm`, `make 4090 stop-flash`, `make 4090 status`), dispatched via `make/make-dispatch.sh`; a bare single action (`make start-flash`) auto-routes to its device. Each device directory has a `status.sh` reporting its services and memory (`thor/status.sh` guards itself and must run on the thor host). Shared literal targets: `help`, `download`, `download-stop`, `check`; recipe lines use tabs. Keep comments concise; Chinese is established for operator-facing messages and documentation.
+Use Bash with a `#!/bin/bash` shebang and fail-fast behavior (`set -e`; prefer `set -euo pipefail` for new standalone scripts when unset variables are handled). Indent continued commands and control-flow bodies with four spaces. Quote variable expansions, use uppercase names for configuration constants (`MODEL`, `PORT`, `LOG`), and derive companion-script paths from `BASH_SOURCE`. Name entry points `start-<service>.sh`, `stop-<service>.sh`, and the backend switcher `switch`. Makefile syntax is device-first: `make <thor|4090> <action>` (e.g. `make thor start-vllm`, `make 4090 stop-flash`, `make 4090 status`), dispatched via `make/make-dispatch.sh`; a bare single action (`make start-flash`) auto-routes to its device. Each device directory has a `status.sh` reporting its services and memory; thor actions run off-host (e.g. from the Windows workstation) are auto-forwarded via `ssh thor -- make -C ~/scripts ...`, and `thor/status.sh` keeps a Linux-only guard for direct invocation. Shared literal targets: `help`, `download`, `download-stop`, `check`; recipe lines use tabs. Keep comments concise; Chinese is established for operator-facing messages and documentation.
 
 ## Testing Guidelines
 
@@ -35,7 +35,7 @@ At minimum, run `make check` (`bash -n` + `git diff --check`). For launcher chan
 
 ## Commit & Pull Request Guidelines
 
-History uses short Conventional Commit-style subjects such as `fix:`, `docs:`, and `refactor:`. Keep each commit focused and use an imperative summary. Pull requests should describe the affected backend, list validation performed, call out model/port/memory changes, and include relevant log excerpts without secrets. Link an issue when one exists.
+History uses short Conventional Commit-style subjects such as `fix:`, `docs:`, and `refactor:`. Keep each commit focused and use an imperative summary. New scripts authored on Windows land as mode 644 in the index; mark them executable with `git update-index --chmod=+x <script>` or they will not run on Linux hosts. Pull requests should describe the affected backend, list validation performed, call out model/port/memory changes, and include relevant log excerpts without secrets. Link an issue when one exists.
 
 ## Security & Agent Instructions
 
