@@ -16,8 +16,9 @@ thor 推理后端 (共用端口 8301, 一次一个):
 
 rtx4090 本机服务 (共用双卡显存, 一次一个):
   make 4090 start-flash / stop-flash          Qwen3.8-Flash-Next-Uncensored (端口 8301)
-  make 4090 start-coldfusion / stop-coldfusion  Qwen3.8-27B Cold-Fusion NEO-MTP (端口 12234)
+  make 4090 start-coldfusion / stop-coldfusion  Qwen3.8-27B Cold-Fusion NEO-MTP (端口 8301)
   make 4090 status          两服务状态 + 双卡显存占用
+  make 4090 logs [行数] [follow]   运行中服务的日志 (默认最近 50 行; follow 持续跟踪, Ctrl-C 退出)
 
 兼容写法: 动作可省略设备前缀自动路由, 如 make start-flash / make stop-all
 

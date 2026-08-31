@@ -11,6 +11,20 @@ fi
 
 PORT=8301
 
+flag_value() {
+    # 取 /proc/$1/cmdline (NUL 分隔参数) 里标志 $2 的值; 多值 (--served-model-name a b) 取第一个
+    [ -r "/proc/$1/cmdline" ] || return 0
+    local prev=""
+    while IFS= read -r -d '' a; do
+        if [ "$prev" = y ]; then echo "$a"; return 0; fi
+        prev=""
+        case "$a" in
+            "$2") prev=y ;;
+            "$2="*) echo "${a#"$2="}"; return 0 ;;
+        esac
+    done < "/proc/$1/cmdline"
+}
+
 backend() {
     pgrep -f 'bin/vllm serve|VLLM::EngineCore' >/dev/null 2>&1 && { echo vllm; return; }
     pgrep -f 'ds4-server'                      >/dev/null 2>&1 && { echo ds; return; }
@@ -31,6 +45,21 @@ else
     else
         HEALTH=无响应
     fi
-    echo "thor: 后端 $CURRENT, PID ${PID:-未知}, health $HEALTH (端口 $PORT)"
+    # 实际 alias: llama.cpp 系用 --alias, vllm/sglang 用 --served-model-name;
+    # 都没有时 (如 ds4) 退回模型文件名
+    ALIAS=""
+    if [ -n "$PID" ]; then
+        case "$CURRENT" in
+            vllm|sglang) ALIAS=$(flag_value "$PID" --served-model-name) || true ;;
+            *)           ALIAS=$(flag_value "$PID" --alias) || true ;;
+        esac
+        if [ -z "$ALIAS" ]; then
+            for f in --model-path --model -m; do
+                ALIAS=$(flag_value "$PID" "$f") || true
+                if [ -n "$ALIAS" ]; then ALIAS="${ALIAS##*/}"; break; fi
+            done
+        fi
+    fi
+    echo "thor: 后端 $CURRENT, PID ${PID:-未知}, health $HEALTH, alias=${ALIAS:-未知} (端口 $PORT)"
 fi
 echo "thor: 统一内存可用 $(free -g | awk 'NR == 2 {print $7}')GB"

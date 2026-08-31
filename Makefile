@@ -6,7 +6,7 @@
 # Hint: quote script paths in recipes - this make direct-spawns argument-free
 #       simple commands without a shell, which fails silently for `bash <file>`
 SHELL := /bin/bash
-# completion: thor=start-vllm,start-ds,start-sglang,start-llama,start-flashnext,stop-all,status 4090=start-flash,stop-flash,start-coldfusion,stop-coldfusion,status
+# completion: thor=start-vllm,start-ds,start-sglang,start-llama,start-flashnext,stop-all,status 4090=start-flash,stop-flash,start-coldfusion,stop-coldfusion,status,logs
 .PHONY: help thor 4090 download download-stop check deploy
 
 .DEFAULT_GOAL := help

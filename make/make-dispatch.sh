@@ -12,7 +12,8 @@ usage() {
   thor:
     start-vllm  start-ds  start-sglang  start-llama  start-flashnext  stop-all  status
   4090:
-    start-flash  stop-flash  start-coldfusion  stop-coldfusion  status
+    start-flash  stop-flash  start-coldfusion  stop-coldfusion  status  logs
+  4090 logs 附加参数: [行数] [follow]   如 make 4090 logs 100 follow
 动作可省略设备前缀自动路由, 如 make start-flash
 thor 动作在其他机器执行时自动经 ssh 转发到 thor
 EOF
@@ -48,6 +49,7 @@ run_4090() {
         start-coldfusion) bash rtx4090/start-qwen38-coldfusion.sh ;;
         stop-coldfusion)  bash rtx4090/stop-qwen38-coldfusion.sh ;;
         status)           bash rtx4090/status.sh ;;
+        logs)             bash rtx4090/logs.sh ;;
         *) echo "未知 4090 动作: $1" >&2; usage; exit 1 ;;
     esac
 }
@@ -58,13 +60,19 @@ case "${1:-}" in
         DEVICE="$1"
         shift
         [ $# -ge 1 ] || { echo "缺少动作" >&2; usage; exit 1; }
-        for action in "$@"; do
+        while [ $# -gt 0 ]; do
+            action="$1"; shift
+            if [ "$DEVICE" = "4090" ] && [ "$action" = "logs" ]; then
+                # logs 的附加参数 (行数/follow) 一并交给 logs.sh, 不再当作后续动作
+                bash rtx4090/logs.sh "$@"
+                break
+            fi
             case "$DEVICE" in thor) thor_action "$action" ;; 4090) run_4090 "$action" ;; esac
         done
         ;;
     start-vllm|start-ds|start-sglang|start-llama|start-flashnext|stop-all)
         thor_action "$1" ;;
-    start-flash|stop-flash|start-coldfusion|stop-coldfusion)
+    start-flash|stop-flash|start-coldfusion|stop-coldfusion|logs)
         run_4090 "$1" ;;
     *)
         echo "未知目标: $1" >&2; usage; exit 1 ;;
