@@ -13,6 +13,7 @@ MMPROJ=$HOME/models/AtomicChat/Qwen3.8-Flash-Next-GGUF/mmproj-Qwen3.8-Flash-Next
 TPL=$HOME/models/AtomicChat/Qwen3.8-Flash-Next-GGUF/chat-template-claude-code.jinja
 PORT=8301
 LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/flashnext-server.log"
+STAMP="$(dirname -- "${BASH_SOURCE[0]}")/../make/logstamp.sh"
 mkdir -p "$(dirname "$LOG")"
 
 # 视觉: 必须配 --no-mmproj-offload。mmproj 卸载 GPU 的路径在 PR #27742 会死锁
@@ -33,7 +34,13 @@ for p in $(pgrep -f "llama.cpp-qwen4exp/build/bin/llama-server" || true); do
 done
 sleep 3
 
-nohup "$BIN" \
+# 输出经 logstamp.sh 加本地时间前缀; wrapper 负责把引擎 PID 写入 pidfile
+: > "$LOG"
+nohup bash -c '
+    stamp="$1" log="$2" pidfile="$3"; shift 3
+    "$@" > >(bash "$stamp" "$log") 2>&1 &
+    echo $! > "$pidfile"
+' _ "$STAMP" "$LOG" /tmp/flashnext-server.pid "$BIN" \
     -m "$MODEL" \
     --mmproj "$MMPROJ" \
     --no-mmproj-offload \
@@ -53,8 +60,8 @@ nohup "$BIN" \
     --spec-ngram-mod-n-max 64 \
     --host 0.0.0.0 \
     --port $PORT \
-    > "$LOG" 2>&1 &
-echo $! > /tmp/flashnext-server.pid
+    >/dev/null 2>&1 &
+for _ in $(seq 1 20); do [ -s /tmp/flashnext-server.pid ] && break; sleep 0.1; done
 echo "flashnext PID $(cat /tmp/flashnext-server.pid), 日志: $LOG"
 
 # 等就绪(95GB mmap + CUDA 图初始化较慢, 上限 30 分钟)

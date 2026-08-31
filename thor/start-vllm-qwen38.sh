@@ -7,6 +7,7 @@ set -e
 MODEL=/home/supcon/models/sakamakismile/Huihui-Qwen3.8-27B-abliterated-NVFP4
 PORT=8301
 LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/vllm-server.log"
+STAMP="$(dirname -- "${BASH_SOURCE[0]}")/../make/logstamp.sh"
 mkdir -p "$(dirname "$LOG")"
 
 # --- 先清理旧实例(含 EngineCore 僵尸,否则统一内存不释放) ---
@@ -28,7 +29,13 @@ echo "内存可用: ${AVAIL}G (需 >100G)"
 export PATH="$HOME/venvs/vllm/bin:$PATH"
 export CPATH="$HOME/tools/pyinc/python3.12:$HOME/tools/pydev/usr/include"
 
-nohup "$HOME/venvs/vllm/bin/vllm" serve "$MODEL" \
+# 输出经 logstamp.sh 加本地时间前缀; wrapper 负责把引擎 PID 写入 pidfile
+: > "$LOG"
+nohup bash -c '
+    stamp="$1" log="$2" pidfile="$3"; shift 3
+    "$@" > >(bash "$stamp" "$log") 2>&1 &
+    echo $! > "$pidfile"
+' _ "$STAMP" "$LOG" /tmp/vllm-server.pid "$HOME/venvs/vllm/bin/vllm" serve "$MODEL" \
     --served-model-name qwen3.8-27b-abliterated-nvfp4 huihui-nvfp4 \
     --port $PORT \
     --max-model-len 262144 \
@@ -38,8 +45,8 @@ nohup "$HOME/venvs/vllm/bin/vllm" serve "$MODEL" \
     --reasoning-parser qwen3 \
     --enable-auto-tool-choice \
     --tool-call-parser qwen3_xml \
-    > "$LOG" 2>&1 &
-echo $! > /tmp/vllm-server.pid
+    >/dev/null 2>&1 &
+for _ in $(seq 1 20); do [ -s /tmp/vllm-server.pid ] && break; sleep 0.1; done
 echo "server PID $(cat /tmp/vllm-server.pid), 日志: $LOG"
 
 # --- 等就绪(看 HTTP 状态码;端口绑定比日志晚 ~20s,勿抢跑) ---

@@ -18,6 +18,7 @@ MODEL_DIR="/e/data/hf_models/orcarouter/Qwen3.8-Flash-Next-Uncensored-GGUF"
 MODEL="$MODEL_DIR/Qwen3.8-Flash-Next-Uncensored-IQ4_XS-00001-of-00003.gguf"
 MMPROJ="$MODEL_DIR/mmproj-Qwen3.8-Flash-Next-Uncensored-F16.gguf"
 LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/qwen38-flash-server.log"
+STAMP="$(dirname -- "${BASH_SOURCE[0]}")/../make/logstamp.sh"
 mkdir -p "$(dirname "$LOG")"
 PORT=8301
 
@@ -34,7 +35,11 @@ fi
 [ -f "$MODEL" ]  || { echo "缺模型: $MODEL"; exit 1; }
 [ -f "$MMPROJ" ] || { echo "缺视觉: $MMPROJ"; exit 1; }
 
-nohup "$DIR/llama-server.exe" \
+# 输出经 logstamp.sh 加本地时间前缀 (引擎自带的是运行时长戳); 整体包在 nohup bash 里脱离会话存活
+nohup bash -c '
+    stamp="$1" log="$2"; shift 2
+    "$@" 2>&1 | bash "$stamp" "$log"
+' _ "$STAMP" "$LOG" "$DIR/llama-server.exe" \
     -m "$MODEL" \
     --mmproj "$MMPROJ" \
     -ngl 99 \
@@ -50,7 +55,7 @@ nohup "$DIR/llama-server.exe" \
     --alias qwen3.8-flash-next \
     --host 0.0.0.0 \
     --port "$PORT" \
-    >> "$LOG" 2>&1 &
+    >/dev/null 2>&1 &
 
 echo "启动中... 日志: $LOG"
 for _ in $(seq 1 60); do

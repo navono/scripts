@@ -8,6 +8,7 @@ MODEL=/home/supcon/models/RadixArk/Qwen3.8-27B-NVFP4-BF16-LMHead
 DRAFT_MODEL=/home/supcon/models/RadixArk/Qwen3.8-27B-DSpark
 PORT=8301
 LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/sglang-server.log"
+STAMP="$(dirname -- "${BASH_SOURCE[0]}")/../make/logstamp.sh"
 PID_FILE=/tmp/sglang-server.pid
 
 if [[ "$MODE" != "base" && "$MODE" != "dspark" ]]; then
@@ -77,8 +78,15 @@ else
     ARGS+=(--disable-cuda-graph)
 fi
 
-nohup "$HOME/venvs/sglang/bin/python" -m sglang.launch_server "${ARGS[@]}" >"$LOG" 2>&1 &
-echo $! >"$PID_FILE"
+# 输出经 logstamp.sh 加本地时间前缀; wrapper 负责把引擎 PID 写入 pidfile
+: > "$LOG"
+nohup bash -c '
+    stamp="$1" log="$2" pidfile="$3"; shift 3
+    "$@" > >(bash "$stamp" "$log") 2>&1 &
+    echo $! > "$pidfile"
+' _ "$STAMP" "$LOG" "$PID_FILE" "$HOME/venvs/sglang/bin/python" -m sglang.launch_server "${ARGS[@]}" \
+    >/dev/null 2>&1 &
+for _ in $(seq 1 20); do [ -s "$PID_FILE" ] && break; sleep 0.1; done
 echo "SGLang ($MODE) PID $(cat "$PID_FILE")，日志: $LOG"
 
 code=000

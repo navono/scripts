@@ -9,6 +9,7 @@ DRAFT=$HOME/models/incoai/Qwen3.8-27B-DFlash2-GGUF/Qwen3.8-27B-DFlash2-Q8_0.gguf
 MMPROJ=$HOME/models/JonathanColetti/Qwen3.8-27B-Uncensored-GGUF/Qwen3.8-27B-Uncensored-vision-f16.gguf  # 需要视觉时取消注释并加 --mmproj
 PORT=8301
 LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/llamacpp-server.log"
+STAMP="$(dirname -- "${BASH_SOURCE[0]}")/../make/logstamp.sh"
 mkdir -p "$(dirname "$LOG")"
 
 for p in $(ps aux | grep -a "llama-server" | grep -av grep | awk '{print $2}'); do
@@ -17,7 +18,13 @@ done
 sleep 2
 
 # n_max=4 为实测最优(3~4 同档,再高接受率崩)
-nohup "$BIN" \
+# 输出经 logstamp.sh 加本地时间前缀; wrapper 负责把引擎 PID 写入 pidfile
+: > "$LOG"
+nohup bash -c '
+    stamp="$1" log="$2" pidfile="$3"; shift 3
+    "$@" > >(bash "$stamp" "$log") 2>&1 &
+    echo $! > "$pidfile"
+' _ "$STAMP" "$LOG" /tmp/llamacpp-server.pid "$BIN" \
     -m "$TARGET" \
     --mmproj "$MMPROJ" \
     -md "$DRAFT" \
@@ -36,8 +43,8 @@ nohup "$BIN" \
     --host 0.0.0.0 \
     --port $PORT \
     -c 262144 \
-    > "$LOG" 2>&1 &
-echo $! > /tmp/llamacpp-server.pid
+    >/dev/null 2>&1 &
+for _ in $(seq 1 20); do [ -s /tmp/llamacpp-server.pid ] && break; sleep 0.1; done
 echo "llama-server PID $(cat /tmp/llamacpp-server.pid), 日志: $LOG"
 
 for i in $(seq 1 60); do
