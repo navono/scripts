@@ -15,9 +15,10 @@ MODEL="$MODEL_DIR/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-NEO-MTP-Q6_K.
 MMPROJ="$MODEL_DIR/mmproj-F16.gguf"
 TPL="/e/data/qwen36-40b-claude-code-chat-template.jinja"
 LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/qwen38-coldfusion-server.log"
+STAMP="$(dirname -- "${BASH_SOURCE[0]}")/../make/logstamp.sh"
 mkdir -p "$(dirname "$LOG")"
-PORT=12234
-API_KEY="YOUR_API_KEY"
+PORT=8301
+API_KEY="sk-pingqixing"
 
 find_pid() {
     netstat -ano | grep -E ":${PORT}[[:space:]].*LISTENING" | awk '{print $NF}' | head -1
@@ -33,9 +34,13 @@ fi
 [ -f "$MMPROJ" ] || { echo "缺视觉: $MMPROJ"; exit 1; }
 [ -f "$TPL" ]   || { echo "缺模板: $TPL"; exit 1; }
 
-nohup "$BIN" \
+# 输出经 logstamp.sh 加本地时间前缀 (引擎自带的是运行时长戳); 整体包在 nohup bash 里脱离会话存活
+nohup bash -c '
+    stamp="$1" log="$2"; shift 2
+    "$@" 2>&1 | bash "$stamp" "$log"
+' _ "$STAMP" "$LOG" "$BIN" \
     --model "$MODEL" \
-    --alias Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF \
+    --alias Qwen3.8-27B-ColdFusion \
     --host 0.0.0.0 \
     --port "$PORT" \
     --api-key "$API_KEY" \
@@ -70,7 +75,7 @@ nohup "$BIN" \
     --spec-draft-n-min 0 \
     --spec-draft-p-min 0 \
     --mmproj "$MMPROJ" \
-    >> "$LOG" 2>&1 &
+    >/dev/null 2>&1 &
 
 echo "启动中... 日志: $LOG"
 for _ in $(seq 1 60); do
