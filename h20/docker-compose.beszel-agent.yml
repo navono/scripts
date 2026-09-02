@@ -1,0 +1,41 @@
+# Beszel agent (监控系统数据采集端)
+# hub 部署在 rtx4090 工作站 WSL2 内 (http://localhost:8090, 见 docs/beszel.md)
+# hub 通过 SSH 主动连接本机 45876 端口, KEY 为 hub 全局公钥 (/var/lib/beszel/hub-agent.pub)
+# 启动: cd /data/scripts && docker compose -f docker-compose.beszel-agent.yml up -d
+services:
+  beszel-agent:
+    image: henrygd/beszel-agent-nvidia:latest
+    container_name: beszel-agent
+    restart: unless-stopped
+    # host 网络: 采集宿主机网络统计, 并直接监听宿主机 45876
+    network_mode: host
+    volumes:
+      # 容器级 CPU/内存/网络统计 (h20 上跑着的各推理服务)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    devices:
+      # S.M.A.R.T.: 仅透传 MegaRAID 控制器 ioctl 节点即可发现并查询全部物理盘
+      # (smartctl --scan 会列出 6 块 megaraid 物理盘); 不要挂 /dev/sda、/dev/sdb,
+      # 否则会额外上报两块 RAID 逻辑卷(虚拟盘), 在面板里显示为 UNKNOWN/N/A 噪音。
+      # 节点由主机侧 mknod 创建, 重启后消失 —— 见 docs/beszel.md 的持久化说明。
+      - /dev/megaraid_sas_ioctl_node:/dev/megaraid_sas_ioctl_node
+    # megaraid_sas ioctl 的 open() 要求 CAP_SYS_ADMIN (Docker 默认能力集不含)
+    cap_add:
+      - SYS_ADMIN
+    # 镜像为 distroless (无 shell), 用 CMD 形式直接 exec 二进制的 health 子命令
+    healthcheck:
+      test: ["CMD", "/agent", "health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    environment:
+      LISTEN: 45876
+      KEY: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG8wqaW2li04q/Za0d3IZjL3LiSK5jZ6t5NYTNqHtKPQ"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            # GPU 指标 (利用率/显存/温度/功耗) 需要 utility capability;
+            # 镜像 beszel-agent-nvidia 自带 NVML/nvidia-smi
+            - driver: nvidia
+              count: all
+              capabilities: [utility]
