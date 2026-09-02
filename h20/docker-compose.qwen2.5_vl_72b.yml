@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  qwen2.5-vl-72b:
+    image: vllm/vllm-openai:v0.10.0
+    container_name: qwen2.5-vl-72b
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=4,5
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - RAY_BACKEND_LOG_LEVEL=debug
+      - RAY_LOG_TO_STDERR=1
+      - NCCL_P2P_DISABLE=1
+      - NCCL_NVLS_ENABLE=0
+    volumes:
+      - /data/models/hf_models/:/root/.cache/huggingface
+    ports:
+      - "18800:8000"
+    ipc: host
+    command:
+      - "--model"
+      - "Qwen/Qwen2.5-VL-72B-Instruct"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8000"
+      - "--dtype"
+      - "bfloat16"
+      - "--limit-mm-per-prompt"
+      - '{"image":5,"video":5}'
+      - "--tensor-parallel-size"
+      - "2"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['4', '5']
+              capabilities: [gpu]

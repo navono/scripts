@@ -1,0 +1,54 @@
+# GLM-5.3-Flash UD-Q4_K_XL (~200GB, 320B-A18B MoE, 多模态)
+# 需要 unsloth glm5next 分支的 llama.cpp (主线未合并): /data/pqx/llama.cpp-glm5next (CUDA 12.8 容器内编译)
+# 2x H20-3e (GPU 4,5); 注意: GPU 只在 device_ids 声明一次, 不要再配 NVIDIA_VISIBLE_DEVICES (会双重过滤)
+# 启动: cd /data/scripts && docker compose -f docker-compose.glm5.3_flash.yml up -d
+# 停止: /data/scripts/stop-glm5.3_flash.sh
+services:
+  llama-glm5.3-flash:
+    image: nvidia/cuda:12.8.1-runtime-ubuntu22.04
+    container_name: llama-glm5.3-flash
+    runtime: nvidia
+    restart: unless-stopped
+    network_mode: host
+    ipc: host
+    environment:
+      - LD_LIBRARY_PATH=/src/build/bin
+    entrypoint:
+      - /src/build/bin/llama-server
+    command:
+      - -m
+      - /hf/snapshots/2975ab414d30340466d8c51533c6e91f0cca64c1/UD-Q4_K_XL/GLM-5.3-Flash-UD-Q4_K_XL-00001-of-00006.gguf
+      - --mmproj
+      - /models/mmproj-F16.gguf
+      - --alias
+      - unsloth/GLM-5.3-Flash-UD-Q4_K_XL
+      - --host
+      - 0.0.0.0
+      - --port
+      - "10083"
+      - -ngl
+      - "999"
+      - -sm
+      - layer
+      - -c
+      - "131072"
+      - -t
+      - "64"
+      - -ub
+      - "1024"
+      - -b
+      - "4096"
+      - -fa
+      - on
+      - --jinja
+    volumes:
+      - /data/pqx/llama.cpp-glm5next:/src:ro
+      - /data/models/hf_models/hub/models--unsloth--GLM-5.3-Flash-GGUF:/hf:ro
+      - /data/models/GLM-5.3-Flash-mmproj-F16.gguf:/models/mmproj-F16.gguf:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['4', '5']
+              capabilities: [gpu]

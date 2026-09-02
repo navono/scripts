@@ -1,0 +1,21 @@
+services:
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: rustfs_container
+    ports:
+      - "19000:9000"
+    volumes:
+      - /data/rustfs/data:/data
+    environment:
+      RUSTFS_ACCESS_KEY: supcondcs
+      RUSTFS_SECRET_KEY: supcondcs
+      RUSTFS_CONSOLE_ENABLE: "true"
+    command:
+      - --address
+      - :9000
+      - --console-enable
+      - --access-key
+      - supcondcs
+      - --secret-key
+      - supcondcs
+      - /data

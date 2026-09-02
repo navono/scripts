@@ -1,0 +1,53 @@
+services:
+    llama-qwen3.5-397b:
+      image: llama.cpp:server-cuda
+      container_name: llama-qwen3.5-397b
+      environment:
+        - CUDA_VISIBLE_DEVICES=4,5
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
+      ports:
+        - "10081:8080"
+      volumes:
+        - /data/models:/data/models
+      command:
+        - --model
+        - /data/models/hf_models/hub/models--unsloth--Qwen3.5-397B-A17B-GGUF/snapshots/abcbf9b1686cbdec98d678f3db51f04abb7a7ca2/UD-Q4_K_XL/Qwen3.5-397B-A17B-UD-Q4_K_XL-00001-of-00006.gguf
+        - --mmproj
+        - /data/models/hf_models/hub/models--unsloth--Qwen3.5-397B-A17B-GGUF/snapshots/abcbf9b1686cbdec98d678f3db51f04abb7a7ca2/mmproj-F16.gguf
+        - --alias
+        - unsloth/Qwen3.5-397B-A17B
+        - --host
+        - 0.0.0.0
+        - --port
+        - "8080"
+        - --temp
+        - "0.6"
+        - --top-p
+        - "0.95"
+        - --ctx-size
+        - "262144"
+        - --top-k
+        - "20"
+        - --min-p
+        - "0.00"
+        - --flash-attn
+        - "on"
+        - "--parallel"
+        - "4"
+        - --threads
+        - "64"
+        - --batch-size
+        - "4096"
+        - --ubatch-size
+        - "512"
+        - --n-gpu-layers
+        - "999"
+        - --chat-template-kwargs
+        - '{"enable_thinking":false}'
+      restart: unless-stopped

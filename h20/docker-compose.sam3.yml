@@ -1,0 +1,48 @@
+services:
+  sam3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
+    image: sam3:latest
+    container_name: sam3
+    network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=7
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      # Point at the snapshot dir, not the repo root: detect_backend() looks for
+      # sam3.1_multiplex.pt directly under model_path, but in the HF cache layout
+      # that file lives under snapshots/<hash>/. The repo root is still mounted
+      # (below) so the snapshot's ../../blobs/ symlinks resolve. Update the hash
+      # if the model is re-downloaded (see refs/main on the host).
+      - SAM3_MODEL_PATH=/models/sam3/snapshots/d094d562d62ccbf550215d6697d5eb6193bfab83
+      - SAM3_BACKEND=${SAM3_BACKEND:-auto}
+      - SAM3_DEVICE=cuda:0
+      - SAM3_DTYPE=bfloat16
+      - SERVED_MODEL_NAME=sam3
+      - SAM3_DEBUG_OUTPUT_DIR=/outputs
+      - SAM3_TILE_OVERLAP=${SAM3_TILE_OVERLAP:-0.3}
+      - PORT=12245
+      - PYTHONUNBUFFERED=1
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+    volumes:
+      # Mount the ENTIRE HF model repo: the snapshot dir is full of symlinks
+      # pointing at ../../blobs/, which only resolve if blobs/ is mounted too.
+      - /data/models/hf_models/hub/models--jetjodh--sam3.1:/models/sam3:ro
+      # Hot-reload the server scripts during development.
+      # - ./server.py:/app/server.py
+      # - ./sam3_backend.py:/app/sam3_backend.py
+      # - ./sam3_tiles.py:/app/sam3_tiles.py
+      # - ./outputs:/outputs
+    restart: unless-stopped
+    stop_grace_period: 30s

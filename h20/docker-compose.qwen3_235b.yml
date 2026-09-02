@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  qwen3-235b-a22b-fp8:
+    image: vllm/vllm-openai:latest
+    container_name: qwen3-235b-a22b-fp8
+    runtime: nvidia
+    environment:
+      - CUDA_VISIBLE_DEVICES=0,1,2,3
+      - NVIDIA_VISIBLE_DEVICES=0,1,2,3
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - RAY_BACKEND_LOG_LEVEL=debug
+      - RAY_LOG_TO_STDERR=1
+      - NCCL_P2P_DISABLE=1
+      - NCCL_NVLS_ENABLE=0
+    volumes:
+      - /data/models/hf_models/:/root/.cache/huggingface
+    ports:
+      - "18001:18001"
+    ipc: host
+    command:
+      - "--model"
+      - "Qwen/Qwen3-235B-A22B-FP8"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "18001"
+      - "--enable-reasoning"
+      - "--reasoning-parser"
+      - "deepseek_r1"
+      - "--enable-auto-tool-choice"
+      - "--tool-call-parser"
+      - "hermes"
+      - "--tensor-parallel-size"
+      - "4"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0', '1', '2', '3']
+              capabilities: [gpu]

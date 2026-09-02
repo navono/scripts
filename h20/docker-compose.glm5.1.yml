@@ -1,0 +1,50 @@
+services:
+    llama-glm-5.1:
+      image: llama.cpp:server-cuda
+      container_name: llama-glm-5.1
+      environment:
+        - CUDA_VISIBLE_DEVICES=4,5,6,7
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
+      ports:
+        - "10082:8080"
+      volumes:
+        - /data/models:/data/models
+      command:
+        - --model
+        - /data/models/hf_models/hub/models--unsloth--GLM-5.1-GGUF/snapshots/3238253553497e969f3144fda297dac98b99dbbe/UD-Q4_K_XL/GLM-5.1-UD-Q4_K_XL-00001-of-00011.gguf
+        - --alias
+        - unsloth/GLM-5.1
+        - --host
+        - 0.0.0.0
+        - --port
+        - "8080"
+        - --jinja
+        - --temp
+        - "0.6"
+        - --top-p
+        - "0.95"
+        - --ctx-size
+        - "65536"
+        - --top-k
+        - "20"
+        - --min-p
+        - "0.00"
+        - --flash-attn
+        - "on"
+        - --parallel
+        - "1"
+        - --threads
+        - "64"
+        - --batch-size
+        - "4096"
+        - --ubatch-size
+        - "512"
+        - --n-gpu-layers
+        - "999"
+      restart: unless-stopped

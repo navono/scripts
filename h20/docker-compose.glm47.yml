@@ -1,0 +1,33 @@
+services:
+    llama-glm47:
+      image: llama-server:cuda
+      container_name: llama-glm47
+      environment:
+        - CUDA_VISIBLE_DEVICES=4,5
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
+      ports:
+        - "10002:8080"
+      volumes:
+        - /data/models:/models
+      command:
+        - --model
+        - /models/hf_models/GLM4-7/huihui-GLM-4.7-abliterated-Q4_0.gguf
+        - --device
+        - cuda0,cuda1
+        - --gpu-layers
+        - "-1"
+        - --tensor-split
+        - 0.5,0.5
+        - -c
+        - "131072"
+        - --host
+        - 0.0.0.0
+        - --port
+        - "8080"
+      restart: unless-stopped

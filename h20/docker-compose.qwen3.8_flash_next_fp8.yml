@@ -1,0 +1,50 @@
+# Qwen3.8-Flash-Next-FP8, 专用 vLLM day-0 镜像 (vLLM 0.29.0+)
+# 2x H20-3e (GPU 6,7), TP2+EP; 参数依据 https://recipes.vllm.ai/Qwen/Qwen3.8-Flash-Next
+# 注意: GPU 只在 deploy.resources.device_ids 声明一次, 不要再配 NVIDIA_VISIBLE_DEVICES (会双重过滤导致容器内无 GPU)
+# 启动: cd /data/scripts && docker compose -f docker-compose.qwen3.8_flash_next_fp8.yml up -d
+services:
+  vllm-qwen3.8-flash-next-fp8:
+    image: vllm/vllm-openai:qwen38-flash-next
+    container_name: vllm-qwen3.8-flash-next-fp8
+    runtime: nvidia
+    restart: unless-stopped
+    network_mode: host
+    ipc: host
+    environment:
+      - VLLM_PLE_CPU_OFFLOAD=1
+    volumes:
+      - /data/models/hf_models/Qwen3.8-Flash-Next-FP8:/models/qwen38-fp8:ro
+    entrypoint:
+      - vllm
+      - serve
+      - /models/qwen38-fp8
+    command:
+      - --served-model-name
+      - Qwen3.8-Flash-Next-FP8
+      - --host
+      - 0.0.0.0
+      - --port
+      - "10081"
+      - --tensor-parallel-size
+      - "2"
+      - --enable-expert-parallel
+      - --moe-backend
+      - triton
+      - --gpu-memory-utilization
+      - "0.90"
+      - --max-num-seqs
+      - "256"
+      - --enable-prefix-caching
+      - --no-enable-flashinfer-autotune
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - qwen3_xml
+      - --reasoning-parser
+      - qwen3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['6', '7']
+              capabilities: [gpu]

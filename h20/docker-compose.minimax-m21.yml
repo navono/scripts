@@ -1,0 +1,31 @@
+services:
+    llama-minimax-m21:
+      image: llama-server:cuda
+      container_name: llama-minimax-m21
+      environment:
+        - CUDA_VISIBLE_DEVICES=4
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
+      ports:
+        - "10003:8080"
+      volumes:
+        - /data/models:/models
+      command:
+        - --model
+        - /models/hf_models/MiniMax-M2.1/MiniMax-M2.1-UD-Q4_K_XL.gguf
+        - --device
+        - cuda0
+        - --gpu-layers
+        - "-1"
+        - -c
+        - "131072"
+        - --host
+        - 0.0.0.0
+        - --port
+        - "8080"
+      restart: unless-stopped

@@ -1,0 +1,58 @@
+services:
+  deepseek-ocr-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Build on the host network so dependency downloads (PyTorch cu128 index,
+      # Tsinghua/PyPI, flash-attn wheel via hf-mirror.com, Aliyun apt) reach
+      # the internet directly — the host's 127.0.0.1 proxy is unreachable from
+      # a build container.
+      network: host
+    image: deepseek-ocr-2:latest
+    container_name: deepseek-ocr-2
+    # Host networking — simplest way to expose 12243 directly (matches sibling services).
+    network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['7']
+              capabilities: [gpu]
+    environment:
+      # Expose GPUs to the container. OCR_WORKER_DEVICES lists the CUDA devices
+      # the process pool binds to (one worker per device × OCR_INFER_THREADS
+      # replicas). Override to e.g. "0" for single-GPU, or "0,1" for dual-GPU.
+      - NVIDIA_VISIBLE_DEVICES=7
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      # Point at the mounted snapshot dir (contains config + custom modeling code).
+      # The whole repo is mounted so blob symlinks inside the snapshot resolve.
+      - OCR_MODEL_PATH=/models/models--deepseek-ai--DeepSeek-OCR-2/snapshots/aaa02f3811945a91062062994c5c4a3f4c0af2b0
+      - OCR_DEVICE=cuda:0
+      # 'flash_attention_2' (fast, flash-attn wheel) or 'eager' (no extra deps).
+      - OCR_ATTN_IMPLEMENTATION=flash_attention_2
+      - OCR_TILE_WORKERS=${OCR_TILE_WORKERS:-4}
+      # Dual-GPU process pool by default (this host has 2× RTX 4090). Set to
+      # "0" for single-GPU, or empty to fall back to the single-process engine.
+      - OCR_WORKER_DEVICES=0
+      # Worker process replicas per GPU (process pool mode only). Each replica
+      # loads its own model instance and pulls from the shared queue, so several
+      # tiles infer concurrently per card. 1 = legacy one-worker-per-GPU.
+      - OCR_INFER_THREADS=${OCR_INFER_THREADS:-2}
+      - SERVED_MODEL_NAME=deepseek-ocr-2
+      - PORT=12243
+      - PYTHONUNBUFFERED=1
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+    volumes:
+      # Mount the ENTIRE HF model repo: the snapshot dir is full of symlinks
+      # pointing at ../../blobs/, which only resolve if blobs/ is mounted too.
+      - /data/models/hf_models/hub/models--deepseek-ai--DeepSeek-OCR-2:/models/models--deepseek-ai--DeepSeek-OCR-2:ro
+      # Hot-reload the server scripts during development.
+      # - ./server.py:/app/server.py
+      # - ./ocr_tiles.py:/app/ocr_tiles.py
+    restart: unless-stopped
+    # Grace period so the model (6.8 GB) can release GPU memory on shutdown.
+    stop_grace_period: 30s

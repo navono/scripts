@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  qwen3-vl-235b-instruct-2:
+    image: vllm/vllm-openai:qwen3_5
+    container_name: qwen3_5-397b-a17b-2
+    shm_size: '64g'
+    runtime: nvidia
+    restart: unless-stopped
+    environment:
+      - CUDA_VISIBLE_DEVICES=0,1,2,3
+      - NVIDIA_VISIBLE_DEVICES=4,5,6,7
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    volumes:
+      - /data/models/hf_models/:/root/.cache/huggingface
+    ports:
+      - "18002:18002"
+    command:
+      - "Qwen/Qwen3.5-397B-A17B-FP8"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "18002"
+      - "--dtype"
+      - "bfloat16"
+      - "--mm-encoder-tp-mode"
+      - "data"
+      - "--mm-processor-cache-type"
+      - "shm"
+      - "--quantization"
+      - "fp8"
+      - "--tensor-parallel-size"
+      - "4"
+      - "--max-model-len"
+      - "81920"
+      - "--gpu-memory-utilization"
+      - "0.95" 
+      - "--enable-auto-tool-choice"
+      - "--tool-call-parser"
+      - "qwen3_coder"
+      - "--reasoning-parser"
+      - "qwen3"
+      - "--enable-prefix-caching"
+      - "--default-chat-template-kwargs={\"enable_thinking\": false}"    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['4,5,6,7']
+              capabilities: [gpu]

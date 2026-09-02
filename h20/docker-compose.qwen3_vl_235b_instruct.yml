@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  qwen3-vl-235b-instruct:
+    image: qwenllm/qwenvl:qwen3vl-cu128
+    container_name: qwen3-vl-235b-a22b-instruct
+    runtime: nvidia
+    restart: unless-stopped
+    environment:
+      - CUDA_VISIBLE_DEVICES=0,1,2,3
+      - NVIDIA_VISIBLE_DEVICES=0,1,2,3
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - RAY_BACKEND_LOG_LEVEL=debug
+      - RAY_LOG_TO_STDERR=1
+      - NCCL_P2P_DISABLE=1
+      - NCCL_NVLS_ENABLE=0
+      - TORCH_SYMM_MEM_DISABLE_MULTICAST=1
+    volumes:
+      - /data/models/hf_models/:/root/.cache/huggingface
+    network_mode: host
+    command:
+      - "python"
+      - "-m"
+      - "vllm.entrypoints.openai.api_server"
+      - "--model"
+      - "Qwen/Qwen3-VL-235B-A22B-Instruct"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "18001"
+      - "--dtype"
+      - "bfloat16"
+      - "--mm-encoder-tp-mode"
+      - "data"
+      - "--quantization"
+      - "fp8"
+      - "--enable-auto-tool-choice"
+      - "--tool-call-parser"
+      - "hermes"
+      - "--tensor-parallel-size"
+      - "4"
+      - "--distributed-executor-backend"
+      - "mp"
+      - "--max-model-len"
+      - "32768"
+      - "--enable-expert-parallel"
+      - "--limit-mm-per-prompt.video"
+      - "0"
+      - "--gpu-memory-utilization"
+      - "0.85"  
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0,1,2,3']
+              capabilities: [gpu]

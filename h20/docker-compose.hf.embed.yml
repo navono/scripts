@@ -1,0 +1,13 @@
+services:
+  bge-reranker-large:
+    image: ghcr.io/huggingface/text-embeddings-inference:1.7
+    container_name: bge-reranker-large
+    ports:
+      - "10086:80"
+    volumes:
+      - /data/models/hf_models:/data
+    environment:
+      - MODEL_ID=BAAI/bge-reranker-large
+      - MODEL_TYPE=reranker
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    restart: always
