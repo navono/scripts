@@ -39,7 +39,7 @@ History uses short Conventional Commit-style subjects such as `fix:`, `docs:`, a
 
 ## Security & Agent Instructions
 
-Never commit tokens, `.env` files, model weights, or runtime logs. Preserve host-specific paths deliberately. Make subsequent repository changes directly on the `main` branch unless the user explicitly requests a separate branch or worktree.
+Never commit secrets — tokens, passwords, or API keys — in files or in git history; GitHub push protection rejects known secret patterns, and unrecognized ones still leak. Reference credentials via `${VAR}` in compose files or read them from a per-device `.env` placed next to the consuming script/file (`.env` is excluded by the root `.gitignore`; on h20 the real values live in `/data/scripts/.env`, mode 600). Existing patterns to follow: `h20/docker-compose.*.yml` (`HUGGING_FACE_HUB_TOKEN`, `RUSTFS_ACCESS_KEY`/`RUSTFS_SECRET_KEY`, `POSTGRES_PASSWORD`/`PGADMIN_DEFAULT_PASSWORD`), `rtx4090/start-qwen38-coldfusion.sh` (`API_KEY` sourced from `rtx4090/.env`), `rtx4090/beszel-agent-run.cmd` (`TOKEN` parsed from the untracked `E:\data\tools\beszel\beszel.env`). Public keys (e.g. the Beszel hub SSH key) are not secrets and may stay inline. If a credential ends up in history: rewrite the commit before pushing, or rotate the value if it was already published — treat a leaked secret as burned. Beyond secrets: never commit `.env` files, model weights, or runtime logs. Preserve host-specific paths deliberately. Make subsequent repository changes directly on the `main` branch unless the user explicitly requests a separate branch or worktree.
 
 ## Network Access
 

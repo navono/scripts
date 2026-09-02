@@ -1,10 +1,12 @@
+# 密码经环境变量注入, 真值在 /data/scripts/.env (见 h20/README.md)
+# 注意: POSTGRES_PASSWORD 仅在数据卷首次初始化时生效, 已有 /data/pg_data 时改 .env 不会改库内密码
 version: '3'
 services:
   pg:
       image: postgres
       environment:
         POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgres
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 .env 中配置 POSTGRES_PASSWORD}
         POSTGRES_DB: postgres
       volumes:
         - /data/pg_data:/var/lib/postgresql/data
@@ -14,7 +16,7 @@ services:
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: pgadmin@pgadmin.org
-      PGADMIN_DEFAULT_PASSWORD: pgadmin
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?请在 .env 中配置 PGADMIN_DEFAULT_PASSWORD}
     ports:
       - 15433:80
     depends_on:

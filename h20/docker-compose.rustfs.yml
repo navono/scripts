@@ -1,3 +1,4 @@
+# S3 凭据经环境变量注入, 真值在 /data/scripts/.env (见 h20/README.md)
 services:
   rustfs:
     image: rustfs/rustfs:latest
@@ -7,15 +8,15 @@ services:
     volumes:
       - /data/rustfs/data:/data
     environment:
-      RUSTFS_ACCESS_KEY: supcondcs
-      RUSTFS_SECRET_KEY: supcondcs
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:?请在 .env 中配置 RUSTFS_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?请在 .env 中配置 RUSTFS_SECRET_KEY}
       RUSTFS_CONSOLE_ENABLE: "true"
     command:
       - --address
       - :9000
       - --console-enable
       - --access-key
-      - supcondcs
+      - ${RUSTFS_ACCESS_KEY}
       - --secret-key
-      - supcondcs
+      - ${RUSTFS_SECRET_KEY}
       - /data

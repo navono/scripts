@@ -18,7 +18,11 @@ LOG="$(dirname -- "${BASH_SOURCE[0]}")/../logs/qwen38-coldfusion-server.log"
 STAMP="$(dirname -- "${BASH_SOURCE[0]}")/../make/logstamp.sh"
 mkdir -p "$(dirname "$LOG")"
 PORT=8301
-API_KEY="sk-pingqixing"
+# API-Key 从同目录 .env 读取 (不入库, 见根 .gitignore 与 AGENTS.md 凭据规则)
+ENV_FILE="$(dirname -- "${BASH_SOURCE[0]}")/.env"
+# shellcheck disable=SC1090
+[ -f "$ENV_FILE" ] && source "$ENV_FILE"
+: "${API_KEY:?请先在 $ENV_FILE 中配置 API_KEY=sk-xxx}"
 
 find_pid() {
     netstat -ano | grep -E ":${PORT}[[:space:]].*LISTENING" | awk '{print $NF}' | head -1

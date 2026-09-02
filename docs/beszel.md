@@ -32,7 +32,8 @@ rtx4090 (WSL2, hub :8090)
 
 - 管理员账号: `/var/lib/beszel/superuser-credentials.txt` (仅 root/ping24 可读, 勿入仓库)
 - hub 全局 agent 公钥: `/var/lib/beszel/hub-agent.pub` (源: `/var/lib/beszel/beszel_data/id_ed25519`, 有记录时首次轮询自动生成); **轮换公钥需同步改三台 agent 的 KEY**
-- 本机 agent 的 universal token: 值 `beszel-767fff0b-...` 已写入 `rtx4090/beszel-agent-run.cmd` (hub 记录见 universal_tokens 集合)
+- 本机 agent 的 universal token: 真值在 `E:\data\tools\beszel\beszel.env` (TOKEN=..., 不入库),
+  由 `rtx4090/beszel-agent-run.cmd` 启动时解析; hub 记录见 universal_tokens 集合
 - 普通用户 `navono@beszel.local` (密码未留存, 不常用; UI 用 superuser 登录即可)
 
 ## 部署文件对照
