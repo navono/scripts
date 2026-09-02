@@ -6,4 +6,7 @@ h20 部署方式与 thor 不同: 模型服务全部走 docker compose, 本目录
 - 真源在 h20 端, 这里的副本用于版本管理与参考; 需要同步时用
   `scp h20:/data/scripts/docker-compose*.yml h20/` 覆盖更新
 - 各文件内含 /data 下主机路径, 属刻意保留
+- **token 一律不放仓库**: compose 通过 `${HUGGING_FACE_HUB_TOKEN}` 引用,
+  真实值放在 h20 端 `/data/scripts/.env` (docker compose 自动读取, 权限 600, 不入 git);
+  本地副本如需直接 `docker compose up`, 在 `h20/` 下自建同名 `.env` (已被 .gitignore 排除)
 - 主机信息: ubuntu, Linux 5.15, 8 x NVIDIA H20-3e
